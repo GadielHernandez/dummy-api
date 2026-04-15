@@ -1,7 +1,7 @@
 const express = require('express')
 const crypto = require('crypto')
 const path = require('path')
-const { put, getDownloadUrl, list, del } = require('@vercel/blob')
+const { put, list, head } = require('@vercel/blob')
 
 const app = express()
 app.use(express.json())
@@ -74,21 +74,20 @@ const DEFAULTS = {
 }
 
 async function blobRead(key) {
-    // List blobs to find the exact URL for this pathname
     const { blobs } = await list({ prefix: BLOBS[key] })
     if (!blobs.length) {
-        // First time — seed with default data
         await blobWrite(key, DEFAULTS[key])
         return DEFAULTS[key]
     }
-    const r = await fetch(blobs[0].downloadUrl)
+    const { downloadUrl } = await head(blobs[0].url)
+    const r = await fetch(downloadUrl)
     if (!r.ok) throw new Error(`Blob read failed: ${r.status}`)
     return r.json()
 }
 
 async function blobWrite(key, data) {
     await put(BLOBS[key], JSON.stringify(data), {
-        access: 'public',
+        access: 'private',
         addRandomSuffix: false,
         contentType: 'application/json',
         allowOverwrite: true,
