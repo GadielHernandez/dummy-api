@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Dummy API Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #0a0e14;
+    --surface: #111620;
+    --surface2: #1a2130;
+    --border: #1e2d42;
+    --accent: #00d9ff;
+    --accent2: #ff6b35;
+    --green: #39d98a;
+    --yellow: #f0c040;
+    --red: #ff5a5a;
+    --text: #c8d8e8;
+    --text-dim: #5a7a9a;
+    --text-bright: #e8f4ff;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+    --r: 6px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 14px;
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .logo { font-family: var(--mono); font-size: 15px; font-weight: 600; color: var(--accent); letter-spacing: 0.5px; }
+  .logo span { color: var(--text-dim); }
+  .token-badge {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: var(--r); padding: 6px 12px;
+    font-family: var(--mono); font-size: 11px; color: var(--text-dim);
+  }
+  .token-badge code { color: var(--accent); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 6px var(--green); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  /* ── TABS ── */
+  nav { display: flex; gap: 0; border-bottom: 1px solid var(--border); background: var(--surface); padding: 0 24px; }
+  .tab { padding: 12px 20px; cursor: pointer; font-size: 13px; font-weight: 500; color: var(--text-dim); border-bottom: 2px solid transparent; transition: all .2s; white-space: nowrap; }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* ── LAYOUT ── */
+  .page { display: none; padding: 24px; max-width: 1200px; margin: 0 auto; }
+  .page.active { display: block; }
+
+  /* ── CARDS ── */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); }
+  .card-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 18px; border-bottom: 1px solid var(--border);
+  }
+  .card-title { font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--text-bright); text-transform: uppercase; letter-spacing: 1px; }
+  .card-body { padding: 18px; }
+
+  /* ── GRID ── */
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media(max-width:768px) { .grid2 { grid-template-columns: 1fr; } }
+
+  /* ── FORMS ── */
+  .form-row { margin-bottom: 12px; }
+  .form-row label { display: block; font-size: 11px; font-weight: 500; color: var(--text-dim); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
+  input, select, textarea {
+    width: 100%; padding: 8px 12px;
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: var(--r); color: var(--text-bright);
+    font-family: var(--sans); font-size: 13px;
+    outline: none; transition: border-color .2s;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+  select option { background: var(--surface); }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: var(--r); border: 1px solid transparent;
+    font-size: 12px; font-weight: 500; cursor: pointer; transition: all .15s;
+    font-family: var(--sans);
+  }
+  .btn-primary { background: var(--accent); color: #000; }
+  .btn-primary:hover { filter: brightness(1.1); }
+  .btn-ghost { background: transparent; color: var(--text-dim); border-color: var(--border); }
+  .btn-ghost:hover { color: var(--text); border-color: var(--text-dim); }
+  .btn-danger { background: transparent; color: var(--red); border-color: var(--red); }
+  .btn-danger:hover { background: var(--red); color: #fff; }
+  .btn-sm { padding: 4px 10px; font-size: 11px; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* ── TABLE ── */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  th { font-family: var(--mono); font-size: 10px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+  td { padding: 10px 12px; border-bottom: 1px solid var(--border); color: var(--text); font-size: 13px; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--surface2); }
+  .new-row td { animation: flashRow .8s ease-out; }
+  @keyframes flashRow { from{background: rgba(0,217,255,.08)} to{background:transparent} }
+
+  /* ── BADGES ── */
+  .badge {
+    display: inline-block; padding: 2px 8px; border-radius: 20px;
+    font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .badge-paid   { background: rgba(57,217,138,.12); color: var(--green); border: 1px solid rgba(57,217,138,.2); }
+  .badge-pending{ background: rgba(240,192,64,.12); color: var(--yellow); border: 1px solid rgba(240,192,64,.2); }
+  .badge-cancelled{ background: rgba(255,90,90,.12); color: var(--red); border: 1px solid rgba(255,90,90,.2); }
+  .badge-in    { background: rgba(0,217,255,.1); color: var(--accent); border: 1px solid rgba(0,217,255,.2); }
+  .badge-out   { background: rgba(255,107,53,.1); color: var(--accent2); border: 1px solid rgba(255,107,53,.2); }
+
+  /* ── MONO TEXT ── */
+  .mono { font-family: var(--mono); }
+  .dim  { color: var(--text-dim); }
+  .bright { color: var(--text-bright); font-weight: 500; }
+  .green { color: var(--green); }
+  .yellow { color: var(--yellow); }
+  .red { color: var(--red); }
+  .accent { color: var(--accent); }
+
+  /* ── STATS ROW ── */
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 14px 16px; }
+  .stat-label { font-size: 10px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+  .stat-value { font-family: var(--mono); font-size: 22px; font-weight: 600; color: var(--text-bright); }
+  .stat-value.accent { color: var(--accent); }
+
+  /* ── TOAST ── */
+  #toast-wrap { position: fixed; bottom: 20px; right: 20px; z-index: 999; display: flex; flex-direction: column; gap: 8px; }
+  .toast {
+    background: var(--surface2); border: 1px solid var(--border); border-radius: var(--r);
+    padding: 10px 16px; font-size: 12px; color: var(--text-bright);
+    animation: slideUp .2s ease-out; max-width: 300px;
+    border-left: 3px solid var(--accent);
+  }
+  .toast.error { border-left-color: var(--red); }
+  .toast.success { border-left-color: var(--green); }
+  @keyframes slideUp { from{transform:translateY(10px);opacity:0} to{transform:translateY(0);opacity:1} }
+
+  /* ── WEBHOOK LOG ── */
+  .wh-log {
+    background: var(--bg); border: 1px solid var(--border); border-radius: var(--r);
+    padding: 12px; margin-bottom: 8px; font-family: var(--mono); font-size: 11px;
+  }
+  .wh-log-header { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; flex-wrap: wrap; }
+  .wh-log pre {
+    background: var(--surface2); border-radius: 4px; padding: 8px;
+    overflow-x: auto; font-size: 10px; color: var(--text-dim);
+    max-height: 120px; overflow-y: auto; white-space: pre-wrap;
+  }
+
+  /* ── SECTION TITLE ── */
+  .section-title { font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 14px; }
+
+  /* ── REFRESH INDICATOR ── */
+  .refresh-info { font-size: 11px; color: var(--text-dim); display: flex; align-items: center; gap: 6px; }
+  .spin { display: inline-block; animation: spin .8s linear infinite; }
+  @keyframes spin { to{transform:rotate(360deg)} }
+
+  /* ── EMPTY STATE ── */
+  .empty { text-align: center; padding: 40px; color: var(--text-dim); font-size: 13px; }
+  .empty-icon { font-size: 32px; margin-bottom: 10px; }
+
+  /* ── ITEMS PREVIEW ── */
+  .items-list { font-size: 11px; color: var(--text-dim); }
+  .items-list span { display: inline-block; margin-right: 6px; }
+
+  mb-0 { margin-bottom: 0 !important; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">dummy<span>/</span>api <span style="color:var(--text-dim);font-weight:300;font-size:12px">— test dashboard</span></div>
+  <div style="display:flex;align-items:center;gap:12px">
+    <div class="refresh-info"><span id="refresh-spin"></span><span id="refresh-label">polling every 3s</span></div>
+    <div class="token-badge"><div class="pulse"></div> Bearer <code id="token-display">loading…</code></div>
+  </div>
+</header>
+
+<nav>
+  <div class="tab active" onclick="switchTab('invoices')">📄 Invoices</div>
+  <div class="tab" onclick="switchTab('products')">📦 Products</div>
+  <div class="tab" onclick="switchTab('webhooks')">🔗 Webhooks</div>
+  <div class="tab" onclick="switchTab('api-ref')">📖 API Reference</div>
+</nav>
+
+<!-- ═══════════════ INVOICES ═══════════════ -->
+<div id="page-invoices" class="page active">
+  <div class="stats">
+    <div class="stat"><div class="stat-label">Total</div><div class="stat-value accent" id="inv-total">–</div></div>
+    <div class="stat"><div class="stat-label">Paid</div><div class="stat-value green" id="inv-paid">–</div></div>
+    <div class="stat"><div class="stat-label">Pending</div><div class="stat-value yellow" id="inv-pending">–</div></div>
+    <div class="stat"><div class="stat-label">Revenue</div><div class="stat-value" id="inv-revenue">–</div></div>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Invoices</span>
+        <span class="refresh-info" id="inv-updated"></span>
+      </div>
+      <div class="table-wrap">
+        <table><thead><tr>
+          <th>Number</th><th>Customer</th><th>Total</th><th>Status</th><th>Actions</th>
+        </tr></thead>
+        <tbody id="invoices-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><span class="card-title">New Invoice</span></div>
+      <div class="card-body">
+        <div class="form-row"><label>Customer Name</label><input id="inv-customer" placeholder="Acme Corp" /></div>
+        <div class="form-row"><label>Status</label>
+          <select id="inv-status">
+            <option value="pending">Pending</option>
+            <option value="paid">Paid</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+        <div style="margin-bottom:12px">
+          <div class="section-title">Items</div>
+          <div id="inv-items-wrap"></div>
+          <button class="btn btn-ghost btn-sm" onclick="addInvoiceItem()">+ Add item</button>
+        </div>
+        <div style="text-align:right;margin-top:6px">
+          <span style="font-family:var(--mono);font-size:13px;color:var(--text-dim);margin-right:12px">Total: <span class="accent" id="inv-total-preview">$0.00</span></span>
+          <button class="btn btn-primary" onclick="createInvoice()">Create Invoice</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ PRODUCTS ═══════════════ -->
+<div id="page-products" class="page">
+  <div class="stats">
+    <div class="stat"><div class="stat-label">Total SKUs</div><div class="stat-value accent" id="prod-total">–</div></div>
+    <div class="stat"><div class="stat-label">In Stock</div><div class="stat-value green" id="prod-instock">–</div></div>
+    <div class="stat"><div class="stat-label">Avg Price</div><div class="stat-value" id="prod-avg">–</div></div>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Products</span>
+        <span class="refresh-info" id="prod-updated"></span>
+      </div>
+      <div class="table-wrap">
+        <table><thead><tr>
+          <th>ID</th><th>Name</th><th>Price</th><th>Stock</th><th>Actions</th>
+        </tr></thead>
+        <tbody id="products-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><span class="card-title">New Product</span></div>
+      <div class="card-body">
+        <div class="form-row"><label>Name</label><input id="prod-name" placeholder="Widget Pro" /></div>
+        <div class="form-row"><label>Price ($)</label><input id="prod-price" type="number" placeholder="99.99" step="0.01" /></div>
+        <div class="form-row"><label>Stock</label><input id="prod-stock" type="number" placeholder="100" /></div>
+        <div style="text-align:right;margin-top:8px">
+          <button class="btn btn-primary" onclick="createProduct()">Create Product</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ WEBHOOKS ═══════════════ -->
+<div id="page-webhooks" class="page">
+  <div class="grid2" style="margin-bottom:20px">
+    <div class="card">
+      <div class="card-header"><span class="card-title">Outgoing Webhook URL</span></div>
+      <div class="card-body">
+        <p style="font-size:12px;color:var(--text-dim);margin-bottom:12px">
+          When you create/update/delete invoices or products, the API will POST to this URL.
+          Great for testing services like <strong style="color:var(--text)">webhook.site</strong> or your own endpoint.
+        </p>
+        <div class="form-row"><label>Target URL</label>
+          <input id="wh-url-input" placeholder="https://webhook.site/your-unique-id" />
+        </div>
+        <div style="display:flex;gap:8px;margin-top:4px">
+          <button class="btn btn-primary" onclick="saveWebhookUrl()">Save URL</button>
+          <button class="btn btn-ghost" onclick="clearWebhookUrl()">Clear</button>
+          <button class="btn btn-ghost" onclick="window.open('https://webhook.site','_blank')">Open webhook.site ↗</button>
+        </div>
+        <div id="wh-url-status" style="margin-top:10px;font-family:var(--mono);font-size:11px;color:var(--text-dim)"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><span class="card-title">Incoming Webhook Receiver</span></div>
+      <div class="card-body">
+        <p style="font-size:12px;color:var(--text-dim);margin-bottom:10px">
+          Your service can POST to this endpoint. All incoming payloads appear in the log below.
+        </p>
+        <div class="form-row"><label>Endpoint</label>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input id="receive-url" readonly style="background:var(--surface2);cursor:pointer" onclick="copyReceiveUrl()" />
+            <button class="btn btn-ghost btn-sm" onclick="copyReceiveUrl()">Copy</button>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--text-dim);margin-top:6px">
+          No auth required. Header <code style="color:var(--accent)">X-Webhook-Event</code> is used as event name.
+        </div>
+        <div style="margin-top:12px">
+          <div class="section-title" style="margin-bottom:8px">Test fire incoming webhook</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <input id="test-event" placeholder="order.paid" style="flex:1;min-width:120px" />
+            <input id="test-payload" placeholder='{"orderId":"123"}' style="flex:2;min-width:160px" />
+            <button class="btn btn-primary btn-sm" onclick="testIncoming()">Fire</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Webhook Log <span id="wh-log-count" style="color:var(--text-dim);font-weight:400"></span></span>
+      <div style="display:flex;gap:8px">
+        <span class="refresh-info" id="wh-updated"></span>
+        <button class="btn btn-danger btn-sm" onclick="clearLogs()">Clear</button>
+      </div>
+    </div>
+    <div id="wh-log-wrap" style="padding:12px;max-height:600px;overflow-y:auto"></div>
+  </div>
+</div>
+
+<!-- ═══════════════ API REFERENCE ═══════════════ -->
+<div id="page-api-ref" class="page">
+  <div class="card" style="margin-bottom:20px">
+    <div class="card-header"><span class="card-title">Authentication</span></div>
+    <div class="card-body">
+      <p style="margin-bottom:12px;color:var(--text-dim);font-size:13px">All protected endpoints require a Base64-encoded token in the Authorization header.</p>
+      <pre style="background:var(--bg);padding:14px;border-radius:var(--r);font-family:var(--mono);font-size:12px;color:var(--accent);overflow-x:auto">Authorization: Bearer <span id="ref-token">…</span></pre>
+      <div style="margin-top:12px;font-size:12px;color:var(--text-dim)">
+        Raw token: <code id="ref-raw" style="color:var(--yellow)"></code> → base64 encoded → <code id="ref-b64" style="color:var(--accent)"></code>
+      </div>
+    </div>
+  </div>
+
+  <div id="api-ref-content"></div>
+</div>
+
+<!-- Toast container -->
+<div id="toast-wrap"></div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// STATE & CONFIG
+// ═══════════════════════════════════════════════════
+let TOKEN = "";
+let invoiceItems = [];
+let knownInvoiceIds = new Set();
+let knownProductIds = new Set();
+let knownWhIds = new Set();
+const BASE = "";
+
+// ═══════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════
+function fmt$(n) { return "$" + parseFloat(n).toFixed(2); }
+function timeAgo(iso) {
+  const d = Math.round((Date.now() - new Date(iso)) / 1000);
+  if (d < 5) return "just now";
+  if (d < 60) return d + "s ago";
+  if (d < 3600) return Math.floor(d/60) + "m ago";
+  return new Date(iso).toLocaleTimeString();
+}
+
+function toast(msg, type="info") {
+  const el = document.createElement("div");
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  document.getElementById("toast-wrap").appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+
+async function api(method, path, body) {
+  const opts = { method, headers: { "Content-Type": "application/json", "Authorization": "Bearer " + TOKEN } };
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(BASE + path, opts);
+  const data = await r.json();
+  if (!r.ok) throw new Error(data.error || "API error");
+  return data;
+}
+
+// ═══════════════════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════════════════
+function switchTab(tab) {
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  event.target.classList.add("active");
+  document.getElementById("page-" + tab).classList.add("active");
+}
+
+// ═══════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════
+async function init() {
+  // Get token
+  const t = await fetch(BASE + "/api/auth/token").then(r => r.json());
+  TOKEN = t.encodedToken;
+  document.getElementById("token-display").textContent = TOKEN;
+  document.getElementById("ref-token").textContent = TOKEN;
+  document.getElementById("ref-raw").textContent = t.rawToken;
+  document.getElementById("ref-b64").textContent = t.encodedToken;
+
+  // Set receive URL
+  document.getElementById("receive-url").value = location.origin + "/api/webhooks/receive";
+
+  // Load webhook config
+  try {
+    const cfg = await api("GET", "/api/webhooks/config");
+    if (cfg.webhookUrl) {
+      document.getElementById("wh-url-input").value = cfg.webhookUrl;
+      document.getElementById("wh-url-status").textContent = "✓ Active: " + cfg.webhookUrl;
+    }
+  } catch(_) {}
+
+  buildApiRef();
+  addInvoiceItem(); // default 1 item row
+  poll();
+  setInterval(poll, 3000);
+}
+
+// ═══════════════════════════════════════════════════
+// POLLING
+// ═══════════════════════════════════════════════════
+async function poll() {
+  const spin = document.getElementById("refresh-spin");
+  spin.innerHTML = '<span class="spin">⟳</span>';
+
+  await Promise.all([loadInvoices(), loadProducts(), loadWebhookLogs()]);
+
+  spin.innerHTML = "";
+}
+
+// ═══════════════════════════════════════════════════
+// INVOICES
+// ═══════════════════════════════════════════════════
+async function loadInvoices() {
+  try {
+    const { data } = await api("GET", "/api/invoices");
+    const tbody = document.getElementById("invoices-tbody");
+    let paid = 0, pending = 0, revenue = 0;
+    const rows = data.map(inv => {
+      if (inv.status === "paid") { paid++; revenue += inv.total; }
+      if (inv.status === "pending") pending++;
+      const isNew = !knownInvoiceIds.has(inv.id);
+      knownInvoiceIds.add(inv.id);
+      return `<tr class="${isNew && knownInvoiceIds.size > data.length ? 'new-row':''}">
+        <td class="mono accent">${inv.number}</td>
+        <td class="bright">${inv.customer}</td>
+        <td class="mono green">${fmt$(inv.total)}</td>
+        <td><span class="badge badge-${inv.status}">${inv.status}</span></td>
+        <td>
+          <select class="btn btn-ghost btn-sm" style="width:90px;padding:3px 6px" onchange="changeStatus('${inv.id}',this.value)">
+            <option value="">Status…</option>
+            <option value="pending">Pending</option>
+            <option value="paid">Paid</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+          <button class="btn btn-danger btn-sm" onclick="deleteInvoice('${inv.id}')">✕</button>
+        </td>
+      </tr>`;
+    }).join("");
+    tbody.innerHTML = rows || `<tr><td colspan="5" class="empty"><div class="empty-icon">📄</div>No invoices yet</td></tr>`;
+    document.getElementById("inv-total").textContent = data.length;
+    document.getElementById("inv-paid").textContent = paid;
+    document.getElementById("inv-pending").textContent = pending;
+    document.getElementById("inv-revenue").textContent = fmt$(revenue);
+    document.getElementById("inv-updated").innerHTML = `<span style="color:var(--green)">✓</span> ${timeAgo(new Date().toISOString())}`;
+  } catch(e) { toast(e.message,"error"); }
+}
+
+async function createInvoice() {
+  const customer = document.getElementById("inv-customer").value.trim();
+  const status = document.getElementById("inv-status").value;
+  if (!customer) { toast("Customer is required","error"); return; }
+  if (!invoiceItems.length) { toast("Add at least one item","error"); return; }
+  const items = invoiceItems.map((_, i) => {
+    const name = document.getElementById(`item-name-${i}`)?.value;
+    const qty  = parseFloat(document.getElementById(`item-qty-${i}`)?.value || 1);
+    const price= parseFloat(document.getElementById(`item-price-${i}`)?.value || 0);
+    return { name, qty, price };
+  }).filter(x => x.name && x.price > 0);
+  if (!items.length) { toast("Fill in at least one item","error"); return; }
+  try {
+    await api("POST", "/api/invoices", { customer, status, items });
+    document.getElementById("inv-customer").value = "";
+    invoiceItems = [];
+    addInvoiceItem();
+    toast("Invoice created ✓","success");
+    await loadInvoices();
+  } catch(e) { toast(e.message,"error"); }
+}
+
+async function changeStatus(id, status) {
+  if (!status) return;
+  try {
+    await api("PATCH", `/api/invoices/${id}/status`, { status });
+    toast(`Status → ${status}`,"success");
+    await loadInvoices();
+  } catch(e) { toast(e.message,"error"); }
+}
+
+async function deleteInvoice(id) {
+  if (!confirm("Delete this invoice?")) return;
+  try {
+    await api("DELETE", `/api/invoices/${id}`);
+    knownInvoiceIds.delete(id);
+    toast("Invoice deleted","success");
+    await loadInvoices();
+  } catch(e) { toast(e.message,"error"); }
+}
+
+function addInvoiceItem() {
+  const i = invoiceItems.length;
+  invoiceItems.push({});
+  const wrap = document.getElementById("inv-items-wrap");
+  const div = document.createElement("div");
+  div.id = `item-row-${i}`;
+  div.style.cssText = "display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:6px;margin-bottom:6px";
+  div.innerHTML = `
+    <input id="item-name-${i}" placeholder="Item name" oninput="calcTotal()" />
+    <input id="item-qty-${i}" type="number" value="1" min="1" placeholder="Qty" oninput="calcTotal()" />
+    <input id="item-price-${i}" type="number" placeholder="Price" step="0.01" oninput="calcTotal()" />
+    <button class="btn btn-ghost btn-sm" onclick="removeItem(${i})" style="padding:6px 8px">✕</button>
+  `;
+  wrap.appendChild(div);
+}
+
+function removeItem(i) {
+  document.getElementById(`item-row-${i}`)?.remove();
+  invoiceItems.splice(i,1);
+  calcTotal();
+}
+
+function calcTotal() {
+  let t = 0;
+  for (let i = 0; i < invoiceItems.length; i++) {
+    const qty = parseFloat(document.getElementById(`item-qty-${i}`)?.value || 0);
+    const price = parseFloat(document.getElementById(`item-price-${i}`)?.value || 0);
+    t += qty * price;
+  }
+  document.getElementById("inv-total-preview").textContent = fmt$(t);
+}
+
+// ═══════════════════════════════════════════════════
+// PRODUCTS
+// ═══════════════════════════════════════════════════
+async function loadProducts() {
+  try {
+    const { data } = await api("GET", "/api/products");
+    const tbody = document.getElementById("products-tbody");
+    let inStock = 0, totalPrice = 0;
+    const rows = data.map(p => {
+      if (p.stock > 0) inStock++;
+      totalPrice += p.price;
+      const isNew = !knownProductIds.has(p.id);
+      knownProductIds.add(p.id);
+      return `<tr class="${isNew && knownProductIds.size > data.length ? 'new-row':''}">
+        <td class="mono dim">${p.id}</td>
+        <td class="bright">${p.name}</td>
+        <td class="mono green">${fmt$(p.price)}</td>
+        <td class="mono ${p.stock > 0 ? 'accent':'red'}">${p.stock}</td>
+        <td><button class="btn btn-danger btn-sm" onclick="deleteProduct('${p.id}')">✕</button></td>
+      </tr>`;
+    }).join("");
+    tbody.innerHTML = rows || `<tr><td colspan="5" class="empty"><div class="empty-icon">📦</div>No products yet</td></tr>`;
+    document.getElementById("prod-total").textContent = data.length;
+    document.getElementById("prod-instock").textContent = inStock;
+    document.getElementById("prod-avg").textContent = data.length ? fmt$(totalPrice/data.length) : "–";
+    document.getElementById("prod-updated").innerHTML = `<span style="color:var(--green)">✓</span> ${timeAgo(new Date().toISOString())}`;
+  } catch(e) { toast(e.message,"error"); }
+}
+
+async function createProduct() {
+  const name  = document.getElementById("prod-name").value.trim();
+  const price = parseFloat(document.getElementById("prod-price").value);
+  const stock = parseInt(document.getElementById("prod-stock").value || "0");
+  if (!name || !price) { toast("Name and price required","error"); return; }
+  try {
+    await api("POST", "/api/products", { name, price, stock });
+    document.getElementById("prod-name").value = "";
+    document.getElementById("prod-price").value = "";
+    document.getElementById("prod-stock").value = "";
+    toast("Product created ✓","success");
+    await loadProducts();
+  } catch(e) { toast(e.message,"error"); }
+}
+
+async function deleteProduct(id) {
+  if (!confirm("Delete this product?")) return;
+  try {
+    await api("DELETE", `/api/products/${id}`);
+    knownProductIds.delete(id);
+    toast("Product deleted","success");
+    await loadProducts();
+  } catch(e) { toast(e.message,"error"); }
+}
+
+// ═══════════════════════════════════════════════════
+// WEBHOOKS
+// ═══════════════════════════════════════════════════
+async function loadWebhookLogs() {
+  try {
+    const { data } = await api("GET", "/api/webhooks/logs");
+    const wrap = document.getElementById("wh-log-wrap");
+    document.getElementById("wh-log-count").textContent = data.length ? `(${data.length})` : "";
+    document.getElementById("wh-updated").innerHTML = `<span style="color:var(--green)">✓</span> ${timeAgo(new Date().toISOString())}`;
+    if (!data.length) {
+      wrap.innerHTML = `<div class="empty"><div class="empty-icon">🔗</div>No webhook events yet.<br>Create an invoice or product to fire one, or POST to the receive endpoint.</div>`;
+      return;
+    }
+    wrap.innerHTML = data.map(log => {
+      const dir = log.direction === "incoming";
+      const isNew = !knownWhIds.has(log.id);
+      knownWhIds.add(log.id);
+      return `<div class="wh-log" style="${isNew?'border-color:var(--accent);':''}">
+        <div class="wh-log-header">
+          <span class="badge badge-${dir?'in':'out'}">${dir ? '← incoming' : '→ outgoing'}</span>
+          <span class="mono accent" style="font-size:11px">${log.event}</span>
+          ${log.status ? `<span class="mono dim">${log.status}</span>` : ""}
+          <span class="dim" style="margin-left:auto;font-size:10px">${timeAgo(log.receivedAt || log.respondedAt)}</span>
+        </div>
+        <pre>${JSON.stringify(log.payload, null, 2)}</pre>
+      </div>`;
+    }).join("");
+  } catch(_) {}
+}
+
+async function saveWebhookUrl() {
+  const url = document.getElementById("wh-url-input").value.trim();
+  try {
+    await api("POST", "/api/webhooks/config", { url });
+    const el = document.getElementById("wh-url-status");
+    if (url) {
+      el.innerHTML = `<span style="color:var(--green)">✓ Active:</span> ${url}`;
+      toast("Webhook URL saved","success");
+    } else {
+      el.textContent = "Webhook URL cleared";
+      toast("Webhook URL cleared");
+    }
+  } catch(e) { toast(e.message,"error"); }
+}
+
+function clearWebhookUrl() {
+  document.getElementById("wh-url-input").value = "";
+  saveWebhookUrl();
+}
+
+async function clearLogs() {
+  try {
+    await api("DELETE", "/api/webhooks/logs");
+    knownWhIds.clear();
+    toast("Logs cleared");
+    await loadWebhookLogs();
+  } catch(e) { toast(e.message,"error"); }
+}
+
+async function testIncoming() {
+  const event = document.getElementById("test-event").value.trim() || "test.event";
+  let payload = {};
+  try { payload = JSON.parse(document.getElementById("test-payload").value || "{}"); } catch(_) {}
+  try {
+    await fetch(BASE + "/api/webhooks/receive", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Webhook-Event": event },
+      body: JSON.stringify(payload)
+    });
+    toast("Webhook fired!","success");
+    await loadWebhookLogs();
+  } catch(e) { toast(e.message,"error"); }
+}
+
+function copyReceiveUrl() {
+  const url = document.getElementById("receive-url").value;
+  navigator.clipboard.writeText(url).then(() => toast("URL copied ✓","success"));
+}
+
+// ═══════════════════════════════════════════════════
+// API REFERENCE
+// ═══════════════════════════════════════════════════
+function buildApiRef() {
+  const endpoints = [
+    { method:"GET",    path:"/api/products",                auth:true,  desc:"List all products" },
+    { method:"POST",   path:"/api/products",                auth:true,  desc:"Create product", body:'{ "name": "Widget", "price": 9.99, "stock": 100 }' },
+    { method:"PUT",    path:"/api/products/:id",            auth:true,  desc:"Update product", body:'{ "price": 14.99 }' },
+    { method:"DELETE", path:"/api/products/:id",            auth:true,  desc:"Delete product" },
+    { method:"GET",    path:"/api/invoices",                auth:true,  desc:"List all invoices" },
+    { method:"POST",   path:"/api/invoices",                auth:true,  desc:"Create invoice", body:'{ "customer": "Acme", "items": [{"name":"Widget","qty":2,"price":9.99}] }' },
+    { method:"PATCH",  path:"/api/invoices/:id/status",     auth:true,  desc:"Update invoice status", body:'{ "status": "paid" }' },
+    { method:"DELETE", path:"/api/invoices/:id",            auth:true,  desc:"Delete invoice" },
+    { method:"POST",   path:"/api/webhooks/receive",        auth:false, desc:"Receive incoming webhook (no auth)" },
+    { method:"GET",    path:"/api/webhooks/logs",           auth:false, desc:"Get webhook logs" },
+    { method:"POST",   path:"/api/webhooks/config",         auth:true,  desc:"Set outgoing webhook URL", body:'{ "url": "https://..." }' },
+    { method:"GET",    path:"/api/auth/token",              auth:false, desc:"Get the base64 token" },
+  ];
+
+  const colors = { GET:"#39d98a", POST:"#00d9ff", PUT:"#f0c040", PATCH:"#f0c040", DELETE:"#ff5a5a" };
+  const html = endpoints.map(e => `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 18px;margin-bottom:10px;display:flex;flex-wrap:wrap;align-items:center;gap:12px">
+      <span style="font-family:var(--mono);font-size:11px;font-weight:600;color:${colors[e.method]};min-width:55px">${e.method}</span>
+      <code style="font-family:var(--mono);font-size:12px;color:var(--accent);flex:1;min-width:200px">${location.origin}${e.path}</code>
+      <span style="font-size:12px;color:var(--text-dim);flex:2;min-width:160px">${e.desc}</span>
+      <span class="badge ${e.auth?'badge-pending':'badge-paid'}" style="font-size:9px">${e.auth?'🔒 auth':'public'}</span>
+      ${e.body ? `<div style="width:100%;margin-top:6px"><pre style="background:var(--bg);padding:8px 12px;border-radius:4px;font-family:var(--mono);font-size:11px;color:var(--text-dim);overflow-x:auto">${e.body}</pre></div>` : ""}
+    </div>
+  `).join("");
+  document.getElementById("api-ref-content").innerHTML = html;
+}
+
+init();
+</script>
+</body>
+</html>
